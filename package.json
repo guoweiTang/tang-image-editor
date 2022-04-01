@@ -1,0 +1,23 @@
+{
+  "name": "tang-image-editor",
+  "version": "1.0.0",
+  "description": "a image editor",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guoweiTang/tang-image-editor.git"
+  },
+  "keywords": [
+    "image",
+    "editor"
+  ],
+  "author": "ice",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/guoweiTang/tang-image-editor/issues"
+  },
+  "homepage": "https://github.com/guoweiTang/tang-image-editor#readme"
+}
