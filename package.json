@@ -1,7 +1,7 @@
 {
   "name": "tang-image-editor",
-  "version": "1.0.0",
-  "description": "a image editor",
+  "version": "0.0.1",
+  "description": "image editor",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/guoweiTang/tang-image-editor/issues"
   },
-  "homepage": "https://github.com/guoweiTang/tang-image-editor#readme"
+  "homepage": "https://github.com/guoweiTang/tang-image-editor#readme",
+  "dependencies": {
+    "tui-color-picker": "^2.2.7"
+  }
 }
