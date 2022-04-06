@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/guoweiTang/tang-image-editor#readme",
   "dependencies": {
+    "nouislider": "^15.5.1",
     "tui-color-picker": "^2.2.7"
   }
 }
