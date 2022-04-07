@@ -1,6 +1,6 @@
 {
   "name": "tang-image-editor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "image editor",
   "main": "index.js",
   "scripts": {

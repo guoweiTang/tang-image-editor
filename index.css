@@ -1,0 +1,87 @@
+.tang_submenubar, .tang_menubar_parameter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  background: #fff;
+}
+.tang_submenubar svg, .tang_menubar_parameter > * {
+  height: 22px;
+}
+.tang_color {
+  width: 22px;
+  box-sizing: border-box;
+  border: 1px solid #d3d3d3;
+  cursor: pointer;
+}
+.tang_submenubar > svg + svg, .tang_menubar_parameter > * + * {
+  margin-left: 20px;
+}
+.tang_prev, .tang_next, .tang_reset {
+  cursor: pointer;
+}
+.tang_prev:not(.active), .tang_next:not(.active), .tang_reset:not(.active) {
+  cursor: not-allowed;
+}
+.tang_next {
+  transform: scaleX(-1);
+}
+.tang_content {
+  position: relative;
+}
+.tang_picture {
+  display: block;
+  margin: 0 auto;
+}
+.tang_draw {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  cursor: crosshair;
+}
+.tang_color_picker {
+  visibility: hidden;
+  padding: 20px;
+  background: #fff;
+  width: 152px;
+  position: absolute;
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, .12);
+}
+.tang_stroke {
+  width: 200px;
+  height: 10px;
+  margin: 0 10px 0 20px;
+}
+.tang_stroke_val {
+  min-width: 36px;
+}
+.noUi-horizontal .noUi-handle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  right: -10px;
+  cursor: pointer;
+}
+.noUi-horizontal .noUi-handle::before, .noUi-horizontal .noUi-handle::after {
+  display: none;
+}
+.tang_color_picker .tui-colorpicker-slider-container {
+  display: block !important;
+}
+.tui-colorpicker-palette-toggle-slider {
+  display: none;
+}
+.tang_loading {
+  visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  background: rgba(255,255,255, .8);
+}

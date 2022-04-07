@@ -3,7 +3,7 @@
  * @Author: tangguowei
  * @Date: 2022-03-31 11:39:06
  * @LastEditors: tangguowei
- * @LastEditTime: 2022-04-07 14:21:39
+ * @LastEditTime: 2022-04-07 17:47:24
  */
 import colorPicker from 'tui-color-picker';
 import 'tui-color-picker/dist/tui-color-picker.css';
@@ -53,10 +53,24 @@ class TangImageEditor {
     } else {
       this.wrapper = element;
     }
-    this.init();
+    this.setImageSrc(this.options.imgSrc, true);
   }
-  // 组件初始化
-  init() {
+  /**
+   * @description: 切换画板的图片源
+   * @param {*} url 图片路径
+   * @param {*} isInit 是否初始化画板
+   * @return {*}
+   */
+  setImageSrc(url, isInit) {
+    if (isInit) {
+      this.initDom();
+      this.bindAllEvents();
+    } else {
+      this.handleRest();
+    }
+    const loadingDom = this.wrapper.querySelector('.tang_loading');
+    loadingDom.style.visibility = 'visible';
+    this.options.imgSrc = url;
     const { imgSrc, maxWidth, maxHeight } = this.options;
     const tempMaxHeight = maxHeight - 50 * 2;
     const img = new Image();
@@ -72,89 +86,21 @@ class TangImageEditor {
         this.width = Number.parseInt(tempMaxHeight * scale);
         this.height = tempMaxHeight;
       }
-      this.initDom();
-      this.bindAllEvents();
+      
       this.pictureDom.width = this.width;
       this.pictureDom.height = this.height;
       this.canvasDom.width = this.width;
       this.canvasDom.height = this.height;
+      this.initColorPickerPosition();
       // TODO：初始图片加载不出来
       setTimeout(() => {
         this.pictureCtx.drawImage(img, 0, 0, this.width, this.height);
+        loadingDom.style.visibility = 'hidden';
       })
     }
   }
   // 初始化dom
   initDom() {
-    const styleDom = document.createElement('style');
-    styleDom.innerHTML = `
-      .tang_submenubar, .tang_menubar_parameter {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 14px;
-        background: #fff;
-      }
-      .tang_submenubar svg, .tang_menubar_parameter > * {
-        height: 22px;
-      }
-      .tang_color {
-        width: 22px;
-        box-sizing: border-box;
-        border: 1px solid #d3d3d3;
-        cursor: pointer;
-      }
-      .tang_submenubar > svg + svg, .tang_menubar_parameter > * + * {
-        margin-left: 20px;
-      }
-      .tang_prev, .tang_next, .tang_reset {
-        cursor: pointer;
-      }
-      .tang_prev:not(.active), .tang_next:not(.active), .tang_reset:not(.active) {
-        cursor: not-allowed;
-      }
-      .tang_next {
-        transform: scaleX(-1);
-      }
-      .tang_content {
-        position: relative;
-      }
-      .tang_picture {
-        display: block;
-      }
-      .tang_draw {
-        position: absolute;
-        left: 0;
-        top: 0;
-      }
-      .tang_color_picker {
-        display: none;
-        padding: 20px;
-        background: #fff;
-        width: 152px;
-        position: absolute;
-        box-shadow: 0px 0px 12px rgba(0, 0, 0, .12);
-      }
-      .tang_stroke {
-        width: 200px;
-        height: 10px;
-        margin: 0 10px 0 20px;
-      }
-      .tang_stroke_val {
-        min-width: 36px;
-      }
-      .noUi-horizontal .noUi-handle {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        right: -10px;
-        cursor: pointer;
-      }
-      .noUi-horizontal .noUi-handle::before, .noUi-horizontal .noUi-handle::after {
-        display: none;
-      }
-    `;
-    document.head.appendChild(styleDom);
     this.wrapper.innerHTML = `
       <div class="tang_submenubar">
         <svg t="1649303699973" class="icon tang_reset" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4608" width="20" height="20"><path d="M981.333333 80.64a42.666667 42.666667 0 0 0-42.666666 42.666667v106.666666A512 512 0 0 0 0 512a42.666667 42.666667 0 0 0 85.333333 0 426.666667 426.666667 0 0 1 793.386667-218.026667H768a42.666667 42.666667 0 1 0 0 85.333334h213.333333a42.666667 42.666667 0 0 0 42.666667-42.666667v-213.333333a42.666667 42.666667 0 0 0-42.666667-42.666667zM981.333333 469.333333a42.666667 42.666667 0 0 0-42.666666 42.666667A426.666667 426.666667 0 0 1 145.28 730.026667H256a42.666667 42.666667 0 0 0 0-85.333334H42.666667a42.666667 42.666667 0 0 0-42.666667 42.666667v213.333333a42.666667 42.666667 0 0 0 85.333333 0v-106.666666A512 512 0 0 0 1024 512a42.666667 42.666667 0 0 0-42.666667-42.666667z" fill="#dbdbdb" p-id="4609"></path></svg>
@@ -162,8 +108,8 @@ class TangImageEditor {
         <svg t="1649303143482" class="icon tang_next" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2857" width="20" height="20"><path d="M558.08 428.3904h-360.6528l202.0352-202.0352a35.82976 35.82976 0 1 0-50.67776-50.67776l-275.15904 275.13856c-1.7408 1.76128-3.2768 3.6352-4.57728 5.62176a33.792 33.792 0 0 0-2.63168 4.99712c-0.19456 0.41984-0.48128 0.80896-0.64512 1.23904-1.49504 3.6864-2.22208 7.59808-2.43712 11.52-0.04096 0.65536-0.19456 1.30048-0.19456 1.95584 0 0.31744 0.08192 0.63488 0.09216 0.94208a35.57376 35.57376 0 0 0 10.40384 24.41216l275.15904 275.13856a35.84 35.84 0 0 0 50.67776-50.67776l-225.8944-225.8944h384.50176c186.32704 0 337.92 151.59296 337.92 337.92v3.40992a35.84 35.84 0 1 0 71.68 0v-3.40992c0-226.22208-183.38816-409.6-409.6-409.6z" fill="#dbdbdb" p-id="2858"></path></svg>
       </div>
       <div class="tang_content">
-        <canvas class="tang_picture" width="${this.width}" height="${this.height}"></canvas>
-        <canvas class="tang_draw" width="${this.width}" height="${this.height}"></canvas>
+        <canvas class="tang_picture"></canvas>
+        <canvas class="tang_draw"></canvas>
       </div>
       <div class="tang_menubar_parameter">
         <i class="tang_color" style="background: ${this.options.color};"></i>
@@ -171,8 +117,9 @@ class TangImageEditor {
         <i class="tang_stroke_val">${this.options.lineWidth}px</i>
       </div>
       <div class="tang_color_picker"></div>
+      <div class="tang_loading">加载中……</div>
     `;
-    this.wrapper.style.width = `${this.width}px`;
+    this.wrapper.style.width = `${this.options.maxWidth}px`;
     this.wrapper.style.position = 'relative';
     this.pictureDom = this.wrapper.querySelector('.tang_picture');
     this.pictureCtx = this.pictureDom.getContext("2d");
@@ -186,9 +133,6 @@ class TangImageEditor {
       color: this.options.color,
     });
     this.initSubmenuDom();
-    const colorDom = this.wrapper.querySelector('.tang_color');
-    colorPickerDom.style.left = `${colorDom.offsetLeft}px`;
-    colorPickerDom.style.top = `${colorDom.offsetTop + colorDom.clientHeight}px`;
 
     // 线条宽度
     const strokeDom = this.wrapper.querySelector('.tang_stroke');
@@ -236,6 +180,14 @@ class TangImageEditor {
       next.querySelector('path').setAttribute('fill', defaultColor);
     }
   }
+  // 初始化颜色选择器位置
+  initColorPickerPosition() {
+    const colorPickerDom = this.wrapper.querySelector('.tang_color_picker');
+    console.log(colorPickerDom.clientHeight)
+    const colorDom = this.wrapper.querySelector('.tang_color');
+    colorPickerDom.style.left = `${colorDom.offsetLeft}px`;
+    colorPickerDom.style.top = `${colorDom.offsetTop - colorPickerDom.clientHeight}px`;
+  }
   // 绑定事件
   bindAllEvents() {
     this.canvasDom.removeEventListener('mousedown', this.handleMousedown);
@@ -257,7 +209,7 @@ class TangImageEditor {
     const picker = this.wrapper.querySelector('.tang_color_picker');
     while (target) {
       if (target.className === 'tang_color') {
-        picker.style.display = 'block';
+        picker.style.visibility = 'visible';
         isTarget = true;
         break;
       } else if (target.className === 'tang_color_picker') {
@@ -267,7 +219,7 @@ class TangImageEditor {
       target = target.parentNode;
     }
     if (!isTarget) {
-      picker.style.display = 'none';
+      picker.style.visibility = 'hidden';
       const color = this.colorPickerInstance.getColor();
       const tangColorDom = this.wrapper.querySelector('.tang_color');
       tangColorDom.style.background = color;
