@@ -11,4 +11,7 @@ const colorPickerInstance = new TangImageEditor('#colorPicker', {
   maxWidth: 500, // render area maxWidth
   maxHeight: 500, // render area maxHeight
 });
+
+// change ImageSource
+colorPickerInstance.setImageSrc('https://fuss10.elemecdn.com/9/bb/e27858e973f5d7d3904835f46abbdjpeg.jpeg');
 ```
