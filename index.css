@@ -1,26 +1,34 @@
-.tang_submenubar, .tang_menubar_parameter {
+.tang_submenubar,
+.tang_menubar_parameter {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px;
+  padding: 0 14px;
   background: #fff;
 }
-.tang_submenubar svg, .tang_menubar_parameter > * {
-  height: 22px;
+.tang_submenubar svg,
+.tang_menubar_parameter > * {
+  padding: 10px;
+  height: 20px;
 }
 .tang_color {
-  width: 22px;
+  width: 20px;
   box-sizing: border-box;
   border: 1px solid #d3d3d3;
   cursor: pointer;
 }
-.tang_submenubar > svg + svg, .tang_menubar_parameter > * + * {
-  margin-left: 20px;
+.tang_submenubar > svg + svg,
+.tang_menubar_parameter > * + * {
+  margin-left: 10px;
 }
-.tang_prev, .tang_next, .tang_reset {
+.tang_prev,
+.tang_next,
+.tang_reset {
   cursor: pointer;
 }
-.tang_prev:not(.active), .tang_next:not(.active), .tang_reset:not(.active) {
+.tang_prev:not(.active),
+.tang_next:not(.active),
+.tang_reset:not(.active) {
   cursor: not-allowed;
 }
 .tang_next {
@@ -46,12 +54,13 @@
   background: #fff;
   width: 152px;
   position: absolute;
-  box-shadow: 0px 0px 12px rgba(0, 0, 0, .12);
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
 }
 .tang_stroke {
   width: 200px;
   height: 10px;
   margin: 0 10px 0 20px;
+  padding: 0;
 }
 .tang_stroke_val {
   min-width: 36px;
@@ -63,7 +72,8 @@
   right: -10px;
   cursor: pointer;
 }
-.noUi-horizontal .noUi-handle::before, .noUi-horizontal .noUi-handle::after {
+.noUi-horizontal .noUi-handle::before,
+.noUi-horizontal .noUi-handle::after {
   display: none;
 }
 .tang_color_picker .tui-colorpicker-slider-container {
@@ -83,5 +93,5 @@
   z-index: 1;
   left: 0;
   top: 0;
-  background: rgba(255,255,255, .8);
+  background: rgba(255, 255, 255, 0.8);
 }

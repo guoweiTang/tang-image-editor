@@ -3,7 +3,7 @@
  * @Author: tangguowei
  * @Date: 2022-03-31 11:39:06
  * @LastEditors: tangguowei
- * @LastEditTime: 2022-04-08 10:43:03
+ * @LastEditTime: 2022-04-08 14:45:52
  */
 import colorPicker from 'tui-color-picker';
 import 'tui-color-picker/dist/tui-color-picker.css';
@@ -24,6 +24,11 @@ class TangImageEditor {
     lineWidth: 2,
     color: '#ff0000',
   };
+  // 初始渲染模块的配置
+  firstOptions = {
+    color: '',
+    lineWidth: 0,
+  };
   // 画布实际展示尺寸
   width = 0;
   height = 0;
@@ -38,8 +43,16 @@ class TangImageEditor {
   };
   // 是否作画过程中
   isDrawing = false;
+
   // 颜色选择器
   colorPickerDom = null;
+  // 颜色选择器实例
+  colorPickerInstance = null;
+
+  // 滑块实例
+  noUiSliderInstance = null;
+  // 线条宽度
+  strokeValDom = null;
   constructor(element, options = {}) {
     if (!options.imgSrc) {
       throw new Error('图片路径不能为空');
@@ -48,6 +61,8 @@ class TangImageEditor {
       ...this.options,
       ...options,
     };
+    this.firstOptions.color = this.options.color;
+    this.firstOptions.lineWidth = this.options.lineWidth;
     if (typeof element === 'string') {
       this.wrapper = document.querySelector(element);
     } else {
@@ -66,13 +81,18 @@ class TangImageEditor {
       this.initDom();
       this.bindAllEvents();
     } else {
+      const { color, lineWidth } = this.firstOptions;
+      this.initColorDom(color);
+      this.colorPickerInstance.setColor(color);
+      this.initLinewidthDom(lineWidth);
+      this.noUiSliderInstance.set(lineWidth);
       this.handleRest();
     }
     const loadingDom = this.wrapper.querySelector('.tang_loading');
     loadingDom.style.visibility = 'visible';
     this.options.imgSrc = url;
     const { imgSrc, maxWidth, maxHeight } = this.options;
-    const tempMaxHeight = maxHeight - 50 * 2;
+    const tempMaxHeight = maxHeight - 40 * 2;
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = imgSrc;
@@ -86,7 +106,6 @@ class TangImageEditor {
         this.width = Number.parseInt(tempMaxHeight * scale);
         this.height = tempMaxHeight;
       }
-      
       this.pictureDom.width = this.width;
       this.pictureDom.height = this.height;
       this.canvasDom.width = this.width;
@@ -128,20 +147,19 @@ class TangImageEditor {
 
     // 颜色选择器
     this.colorPickerDom = this.wrapper.querySelector('.tang_color_picker');
-    const colorPickerInstance = colorPicker.create({
+    this.colorPickerInstance = colorPicker.create({
       container: this.colorPickerDom,
       color: this.options.color,
     });
-    const tangColorDom = this.wrapper.querySelector('.tang_color');
-    colorPickerInstance.on('selectColor', ({ color }) => {
-      tangColorDom.style.background = color;
-      this.options.color = color;
+    this.colorDom = this.wrapper.querySelector('.tang_color');
+    this.colorPickerInstance.on('selectColor', ({ color }) => {
+      this.initColorDom(color);
     })
     this.initSubmenuDom();
 
     // 线条宽度
     const strokeDom = this.wrapper.querySelector('.tang_stroke');
-    noUiSlider.create(strokeDom, {
+    this.noUiSliderInstance = noUiSlider.create(strokeDom, {
       start: this.options.lineWidth,
       range: {
         'min': 1,
@@ -149,12 +167,21 @@ class TangImageEditor {
       },
       connect: 'lower',
     });
-    const strokeValDom = this.wrapper.querySelector('.tang_stroke_val');
+    this.strokeValDom = this.wrapper.querySelector('.tang_stroke_val');
     strokeDom.noUiSlider.on('update', (values) => {
       const value = Number.parseInt(values[0]);
-      strokeValDom.innerHTML = `${value}px`;
-      this.options.lineWidth = value;
+      this.initLinewidthDom(value);
     });
+  }
+  // 渲染颜色
+  initColorDom(color) {
+    this.colorDom.style.background = color;
+    this.options.color = color;
+  }
+  // 渲染线条宽度
+  initLinewidthDom(value) {
+    this.strokeValDom.innerHTML = `${value}px`;
+    this.options.lineWidth = value;
   }
   // 更新次级菜单状态
   initSubmenuDom() {
@@ -187,9 +214,8 @@ class TangImageEditor {
   }
   // 初始化颜色选择器位置
   initColorPickerPosition() {
-    const colorDom = this.wrapper.querySelector('.tang_color');
-    this.colorPickerDom.style.left = `${colorDom.offsetLeft}px`;
-    this.colorPickerDom.style.top = `${colorDom.offsetTop - this.colorPickerDom.clientHeight}px`;
+    this.colorPickerDom.style.left = `${this.colorDom.offsetLeft}px`;
+    this.colorPickerDom.style.top = `${this.colorDom.offsetTop - this.colorPickerDom.clientHeight}px`;
   }
   // 绑定事件
   bindAllEvents() {
@@ -200,29 +226,28 @@ class TangImageEditor {
     document.body.removeEventListener('mouseup', this.handleMouseup);
     document.body.addEventListener('mouseup', this.handleMouseup.bind(this));
 
-    document.body.removeEventListener('click', this.handleSubmenu);
-    document.body.addEventListener('click', this.handleSubmenu.bind(this));
+    document.body.removeEventListener('mousedown', this.handleSubmenu);
+    document.body.addEventListener('mousedown', this.handleSubmenu.bind(this));
 
-    document.body.removeEventListener('click', this.handleColor);
-    document.body.addEventListener('click', this.handleColor.bind(this));
+    document.body.removeEventListener('mousedown', this.handleColor);
+    document.body.addEventListener('mousedown', this.handleColor.bind(this));
   }
   handleColor(event) {
     let target = event.target;
     let isTarget = false;
-    const picker = this.wrapper.querySelector('.tang_color_picker');
     while (target) {
-      if (target.className === 'tang_color') {
-        picker.style.visibility = 'visible';
+      if (target === this.colorDom) {
+        this.colorPickerDom.style.visibility = 'visible';
         isTarget = true;
         break;
-      } else if (target.className === 'tang_color_picker') {
+      } else if (target === this.colorPickerDom) {
         isTarget = true;
         break;
       }
       target = target.parentNode;
     }
     if (!isTarget) {
-      picker.style.visibility = 'hidden';
+      this.colorPickerDom.style.visibility = 'hidden';
     }
   }
   // 开始绘制
