@@ -1,7 +1,7 @@
 {
   "name": "tang-image-editor",
-  "version": "0.1.0",
-  "description": "image editor",
+  "version": "0.1.1",
+  "description": "A simple image editor of native javascript.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
