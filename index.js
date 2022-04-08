@@ -3,7 +3,7 @@
  * @Author: tangguowei
  * @Date: 2022-03-31 11:39:06
  * @LastEditors: tangguowei
- * @LastEditTime: 2022-04-07 17:47:24
+ * @LastEditTime: 2022-04-08 10:43:03
  */
 import colorPicker from 'tui-color-picker';
 import 'tui-color-picker/dist/tui-color-picker.css';
@@ -38,8 +38,8 @@ class TangImageEditor {
   };
   // 是否作画过程中
   isDrawing = false;
-  // 颜色选择实例
-  colorPickerInstance = null;
+  // 颜色选择器
+  colorPickerDom = null;
   constructor(element, options = {}) {
     if (!options.imgSrc) {
       throw new Error('图片路径不能为空');
@@ -127,11 +127,16 @@ class TangImageEditor {
     this.canvasCtx = this.canvasDom.getContext("2d");
 
     // 颜色选择器
-    const colorPickerDom = this.wrapper.querySelector('.tang_color_picker');
-    this.colorPickerInstance = colorPicker.create({
-      container: colorPickerDom,
+    this.colorPickerDom = this.wrapper.querySelector('.tang_color_picker');
+    const colorPickerInstance = colorPicker.create({
+      container: this.colorPickerDom,
       color: this.options.color,
     });
+    const tangColorDom = this.wrapper.querySelector('.tang_color');
+    colorPickerInstance.on('selectColor', ({ color }) => {
+      tangColorDom.style.background = color;
+      this.options.color = color;
+    })
     this.initSubmenuDom();
 
     // 线条宽度
@@ -182,11 +187,9 @@ class TangImageEditor {
   }
   // 初始化颜色选择器位置
   initColorPickerPosition() {
-    const colorPickerDom = this.wrapper.querySelector('.tang_color_picker');
-    console.log(colorPickerDom.clientHeight)
     const colorDom = this.wrapper.querySelector('.tang_color');
-    colorPickerDom.style.left = `${colorDom.offsetLeft}px`;
-    colorPickerDom.style.top = `${colorDom.offsetTop - colorPickerDom.clientHeight}px`;
+    this.colorPickerDom.style.left = `${colorDom.offsetLeft}px`;
+    this.colorPickerDom.style.top = `${colorDom.offsetTop - this.colorPickerDom.clientHeight}px`;
   }
   // 绑定事件
   bindAllEvents() {
@@ -220,9 +223,6 @@ class TangImageEditor {
     }
     if (!isTarget) {
       picker.style.visibility = 'hidden';
-      const color = this.colorPickerInstance.getColor();
-      const tangColorDom = this.wrapper.querySelector('.tang_color');
-      tangColorDom.style.background = color;
     }
   }
   // 开始绘制
@@ -233,7 +233,7 @@ class TangImageEditor {
     this.canvasCtx.beginPath();
     this.canvasCtx.lineCap = 'round';
     this.canvasCtx.lineWidth = this.options.lineWidth;
-    this.canvasCtx.strokeStyle = this.colorPickerInstance.getColor(); // 红色路径
+    this.canvasCtx.strokeStyle = this.options.color; // 红色路径
     this.canvasCtx.lineTo(event.offsetX, event.offsetY);
     this.canvasCtx.stroke(); // 进行绘制
   }
