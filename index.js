@@ -3,7 +3,7 @@
  * @Author: tangguowei
  * @Date: 2022-03-31 11:39:06
  * @LastEditors: tangguowei
- * @LastEditTime: 2022-04-08 14:45:52
+ * @LastEditTime: 2022-04-11 12:26:37
  */
 import colorPicker from 'tui-color-picker';
 import 'tui-color-picker/dist/tui-color-picker.css';
@@ -32,6 +32,7 @@ class TangImageEditor {
   // 画布实际展示尺寸
   width = 0;
   height = 0;
+  originalImage = null;
   // 历史记录
   historyData = [];
   // 当前操作步骤索引
@@ -93,12 +94,12 @@ class TangImageEditor {
     this.options.imgSrc = url;
     const { imgSrc, maxWidth, maxHeight } = this.options;
     const tempMaxHeight = maxHeight - 40 * 2;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imgSrc;
-    img.onload = () => {
+    this.originalImage = new Image();
+    this.originalImage.crossOrigin = 'anonymous';
+    this.originalImage.src = imgSrc;
+    this.originalImage.onload = () => {
       // 调整画板尺寸
-      const scale = img.width / img.height;
+      const scale = this.originalImage.width / this.originalImage.height;
       if (scale > (maxWidth / tempMaxHeight)) {
         this.width = maxWidth;
         this.height = Number.parseInt(maxWidth / scale);
@@ -111,11 +112,9 @@ class TangImageEditor {
       this.canvasDom.width = this.width;
       this.canvasDom.height = this.height;
       this.initColorPickerPosition();
-      // TODO：初始图片加载不出来
-      setTimeout(() => {
-        this.pictureCtx.drawImage(img, 0, 0, this.width, this.height);
-        loadingDom.style.visibility = 'hidden';
-      })
+
+      this.pictureCtx.drawImage(this.originalImage, 0, 0, this.width, this.height);
+      loadingDom.style.visibility = 'hidden';
     }
   }
   // 初始化dom
@@ -136,7 +135,7 @@ class TangImageEditor {
         <i class="tang_stroke_val">${this.options.lineWidth}px</i>
       </div>
       <div class="tang_color_picker"></div>
-      <div class="tang_loading">加载中……</div>
+      <div class="tang_loading"><svg class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none"></circle></svg></div>
     `;
     this.wrapper.style.width = `${this.options.maxWidth}px`;
     this.wrapper.style.position = 'relative';
@@ -324,16 +323,20 @@ class TangImageEditor {
   // 保存图片回调
   async toDataURL() {
     return new Promise(resolve => {
+      const { width, height } = this.originalImage;
       const img = new Image();
+      img.width = width;
+      img.height = height;
       img.src = this.canvasDom.toDataURL('image/png');
       img.onload = () => {
-        // TODO：初始图片加载不出来
-        setTimeout(() => {
-          this.pictureCtx.drawImage(img, 0, 0, this.width, this.height);
-          const dataUrl = this.pictureDom.toDataURL('image/png');
-          this.handleRest();
-          resolve(dataUrl);
-        })
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(this.originalImage, 0, 0, width, height)
+        ctx.drawImage(img, 0, 0, width, height)
+        const dataUrl = canvas.toDataURL('image/png');
+        resolve(dataUrl);
       }
     })
   }
