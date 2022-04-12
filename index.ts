@@ -3,39 +3,44 @@
  * @Author: tangguowei
  * @Date: 2022-03-31 11:39:06
  * @LastEditors: tangguowei
- * @LastEditTime: 2022-04-12 15:07:37
+ * @LastEditTime: 2022-04-12 17:00:54
  */
 import colorPicker from 'tui-color-picker';
 import 'tui-color-picker/dist/tui-color-picker.css';
 import noUiSlider from 'nouislider';
 import 'nouislider/dist/nouislider.css';
+import { Options, TempOptions } from './data.d';
 
 class TangImageEditor {
-  #wrapper = null;
+  #wrapper: HTMLElement;
   // 图片画板、最终画板
-  #pictureDom = null;
-  #pictureCtx = null;
+  #pictureDom?: HTMLCanvasElement;
+  #pictureCtx: any;
   // 编辑画板
-  #canvasDom = null;
-  #canvasCtx = null;
-  #options = {
+  #canvasDom?: HTMLCanvasElement;
+  #canvasCtx: any;
+  #options: Options = {
     // 预设编辑显示区域
+    imgSrc: '',
     maxWidth: 800,
     maxHeight: 500,
     lineWidth: 2,
     color: '#ff0000',
   };
   // 初始渲染模块的配置
-  #firstOptions = {
+  #firstOptions : {
+    color: string;
+    lineWidth: number;
+  } = {
     color: '',
     lineWidth: 0,
   };
   // 画布实际展示尺寸
   #width = 0;
   #height = 0;
-  #originalImage = null;
+  #originalImage?: HTMLImageElement;
   // 历史记录
-  #historyData = [];
+  #historyData: any[] = [];
   // 当前操作步骤索引
   #currentIndex = -1;
   // 作画的位置
@@ -45,20 +50,17 @@ class TangImageEditor {
   };
   // 是否作画过程中
   #isDrawing = false;
-  #colorDom = null;
+  #colorDom?: HTMLElement;
   // 颜色选择器
-  #colorPickerDom = null;
+  #colorPickerDom?: HTMLDivElement;
   // 颜色选择器实例
-  #colorPickerInstance = null;
+  #colorPickerInstance: any;
   // 滑块实例
-  #noUiSliderInstance = null;
+  #noUiSliderInstance: any;
   // 线条宽度
-  #strokeValDom = null;
+  #strokeValDom?: HTMLElement;
 
-  constructor(element, options = {}) {
-    if (!options.imgSrc) {
-      throw new Error('图片路径不能为空');
-    }
+  constructor(element: string | HTMLElement, options: TempOptions) {
     this.#options = {
       ...this.#options,
       ...options,
@@ -66,7 +68,7 @@ class TangImageEditor {
     this.#firstOptions.color = this.#options.color;
     this.#firstOptions.lineWidth = this.#options.lineWidth;
     if (typeof element === 'string') {
-      this.#wrapper = document.querySelector(element);
+      this.#wrapper = document.querySelector(element) as HTMLElement;
     } else {
       this.#wrapper = element;
     }
@@ -78,7 +80,7 @@ class TangImageEditor {
    * @param {*} isInit 是否初始化画板
    * @return {*}
    */
-  setImageSrc(url, isInit) {
+  setImageSrc(url: string, isInit?: boolean) {
     if (isInit) {
       this.#initDom();
       this.#bindAllEvents();
@@ -90,7 +92,7 @@ class TangImageEditor {
       this.#noUiSliderInstance.set(lineWidth);
       this.#handleRest();
     }
-    const loadingDom = this.#wrapper.querySelector('.tang_loading');
+    const loadingDom: HTMLDivElement = this.#wrapper.querySelector('.tang_loading') as HTMLDivElement;
     loadingDom.style.visibility = 'visible';
     this.#options.imgSrc = url;
     const { imgSrc, maxWidth, maxHeight } = this.#options;
@@ -100,18 +102,25 @@ class TangImageEditor {
     this.#originalImage.src = imgSrc;
     this.#originalImage.onload = () => {
       // 调整画板尺寸
-      const scale = this.#originalImage.width / this.#originalImage.height;
+      let scale = 1;
+      if (this.#originalImage) {
+        scale = this.#originalImage.width / this.#originalImage.height;
+      }
       if (scale > (maxWidth / tempMaxHeight)) {
         this.#width = maxWidth;
-        this.#height = Number.parseInt(maxWidth / scale);
+        this.#height = Math.round(maxWidth / scale);
       } else {
-        this.#width = Number.parseInt(tempMaxHeight * scale);
+        this.#width = Math.round(tempMaxHeight * scale);
         this.#height = tempMaxHeight;
       }
-      this.#pictureDom.width = this.#width;
-      this.#pictureDom.height = this.#height;
-      this.#canvasDom.width = this.#width;
-      this.#canvasDom.height = this.#height;
+      if (this.#pictureDom) {
+        this.#pictureDom.width = this.#width;
+        this.#pictureDom.height = this.#height;
+      }
+      if (this.#canvasDom) {
+        this.#canvasDom.width = this.#width;
+        this.#canvasDom.height = this.#height;
+      }
       this.#initColorPickerPosition();
 
       this.#pictureCtx.drawImage(this.#originalImage, 0, 0, this.#width, this.#height);
@@ -140,26 +149,26 @@ class TangImageEditor {
     `;
     this.#wrapper.style.width = `${this.#options.maxWidth}px`;
     this.#wrapper.style.position = 'relative';
-    this.#pictureDom = this.#wrapper.querySelector('.tang_picture');
+    this.#pictureDom = this.#wrapper.querySelector('.tang_picture') as HTMLCanvasElement;
     this.#pictureCtx = this.#pictureDom.getContext("2d");
-    this.#canvasDom = this.#wrapper.querySelector('.tang_draw');
+    this.#canvasDom = this.#wrapper.querySelector('.tang_draw') as HTMLCanvasElement;
     this.#canvasCtx = this.#canvasDom.getContext("2d");
 
     // 颜色选择器
-    this.#colorPickerDom = this.#wrapper.querySelector('.tang_color_picker');
+    this.#colorPickerDom = this.#wrapper.querySelector('.tang_color_picker') as HTMLDivElement;
     this.#colorPickerInstance = colorPicker.create({
       container: this.#colorPickerDom,
       color: this.#options.color,
     });
-    this.#colorDom = this.#wrapper.querySelector('.tang_color');
-    this.#colorPickerInstance.on('selectColor', ({ color }) => {
+    this.#colorDom = this.#wrapper.querySelector('.tang_color') as HTMLElement;
+    this.#colorPickerInstance.on('selectColor', ({ color } : { color: string }) => {
       this.#initColorDom(color);
     })
     this.#initSubmenuDom();
 
     // 线条宽度
-    const strokeDom = this.#wrapper.querySelector('.tang_stroke');
-    this.#noUiSliderInstance = noUiSlider.create(strokeDom, {
+    const strokeDom = this.#wrapper.querySelector('.tang_stroke') as any;
+    this.#noUiSliderInstance = noUiSlider.create(strokeDom as HTMLElement, {
       start: this.#options.lineWidth,
       range: {
         'min': 1,
@@ -167,62 +176,69 @@ class TangImageEditor {
       },
       connect: 'lower',
     });
-    this.#strokeValDom = this.#wrapper.querySelector('.tang_stroke_val');
-    strokeDom.noUiSlider.on('update', (values) => {
-      const value = Number.parseInt(values[0]);
-      this.#initLinewidthDom(value);
+    this.#strokeValDom = this.#wrapper.querySelector('.tang_stroke_val') as HTMLElement;
+    strokeDom.noUiSlider.on('update', (values: number[]) => {
+      this.#initLinewidthDom(values[0]);
     });
   }
   // 渲染颜色
-  #initColorDom(color) {
-    this.#colorDom.style.background = color;
+  #initColorDom(color: string) {
+    if (this.#colorDom) {
+      this.#colorDom.style.background = color;
+    }
     this.#options.color = color;
   }
   // 渲染线条宽度
-  #initLinewidthDom(value) {
-    this.#strokeValDom.innerHTML = `${value}px`;
+  #initLinewidthDom(value: number) {
+    if (this.#strokeValDom) {
+      this.#strokeValDom.innerHTML = `${value}px`;
+    }
     this.#options.lineWidth = value;
   }
   // 更新次级菜单状态
   #initSubmenuDom() {
-    const reset = this.#wrapper.querySelector('.tang_reset');
-    const prev = this.#wrapper.querySelector('.tang_prev');
-    const next = this.#wrapper.querySelector('.tang_next');
+    const reset = this.#wrapper.querySelector('.tang_reset') as SVGElement;
+    const prev = this.#wrapper.querySelector('.tang_prev') as SVGElement;
+    const next = this.#wrapper.querySelector('.tang_next') as SVGElement;
     const activeColor = '#515151';
     const defaultColor = '#dbdbdb';
     if (this.#historyData.length) {
       reset.setAttribute('class', reset.getAttribute('class') + ' active');
-      reset.querySelector('path').setAttribute('fill', activeColor);
+      reset.querySelector('path')?.setAttribute('fill', activeColor);
     } else {
-      reset.setAttribute('class', reset.getAttribute('class').replace(/\s?active/g, ''));
-      reset.querySelector('path').setAttribute('fill', defaultColor);
+      reset.setAttribute('class', (reset.getAttribute('class') as string).replace(/\s?active/g, ''));
+      reset.querySelector('path')?.setAttribute('fill', defaultColor);
     }
     if (this.#currentIndex >= 0) {
       prev.setAttribute('class', prev.getAttribute('class') + ' active');
-      prev.querySelector('path').setAttribute('fill', activeColor);
+      prev.querySelector('path')?.setAttribute('fill', activeColor);
     } else {
-      prev.setAttribute('class', prev.getAttribute('class').replace(/\s?active/g, ''));
-      prev.querySelector('path').setAttribute('fill', defaultColor);
+      prev.setAttribute('class', (prev.getAttribute('class') as string).replace(/\s?active/g, ''));
+      prev.querySelector('path')?.setAttribute('fill', defaultColor);
     }
     if (this.#currentIndex < this.#historyData.length - 1) {
       next.setAttribute('class', next.getAttribute('class') + ' active');
-      next.querySelector('path').setAttribute('fill', activeColor);
+      next.querySelector('path')?.setAttribute('fill', activeColor);
     } else {
-      next.setAttribute('class', next.getAttribute('class').replace(/\s?active/g, ''));
-      next.querySelector('path').setAttribute('fill', defaultColor);
+      next.setAttribute('class', (next.getAttribute('class') as string).replace(/\s?active/g, ''));
+      next.querySelector('path')?.setAttribute('fill', defaultColor);
     }
   }
   // 初始化颜色选择器位置
   #initColorPickerPosition() {
-    this.#colorPickerDom.style.left = `${this.#colorDom.offsetLeft}px`;
-    this.#colorPickerDom.style.top = `${this.#colorDom.offsetTop - this.#colorPickerDom.clientHeight}px`;
-  }
+    if (this.#colorPickerDom) {
+      this.#colorPickerDom.style.left = `${this.#colorDom?.offsetLeft}px`;
+      this.#colorPickerDom.style.top = `${(this.#colorDom?.offsetTop as number) - this.#colorPickerDom.clientHeight}px`;
+    }
+}
   // 绑定事件
   #bindAllEvents() {
-    this.#canvasDom.removeEventListener('mousedown', this.#handleMousedown);
-    this.#canvasDom.addEventListener('mousedown', this.#handleMousedown.bind(this));
-    this.#canvasDom.removeEventListener('mousemove', this.#handleMousemove);
-    this.#canvasDom.addEventListener('mousemove', this.#handleMousemove.bind(this));
+    if (this.#canvasDom) {
+      this.#canvasDom.removeEventListener('mousedown', this.#handleMousedown);
+      this.#canvasDom.addEventListener('mousedown', this.#handleMousedown.bind(this));
+      this.#canvasDom.removeEventListener('mousemove', this.#handleMousemove);
+      this.#canvasDom.addEventListener('mousemove', this.#handleMousemove.bind(this));
+    }
     document.body.removeEventListener('mouseup', this.#handleMouseup);
     document.body.addEventListener('mouseup', this.#handleMouseup.bind(this));
 
@@ -232,12 +248,14 @@ class TangImageEditor {
     document.body.removeEventListener('mousedown', this.#handleColor);
     document.body.addEventListener('mousedown', this.#handleColor.bind(this));
   }
-  #handleColor(event) {
+  #handleColor(event: any) {
     let target = event.target;
     let isTarget = false;
     while (target) {
       if (target === this.#colorDom) {
-        this.#colorPickerDom.style.visibility = 'visible';
+        if (this.#colorPickerDom) {
+          this.#colorPickerDom.style.visibility = 'visible';
+        }
         isTarget = true;
         break;
       } else if (target === this.#colorPickerDom) {
@@ -247,11 +265,13 @@ class TangImageEditor {
       target = target.parentNode;
     }
     if (!isTarget) {
-      this.#colorPickerDom.style.visibility = 'hidden';
-    }
+        if (this.#colorPickerDom) {
+          this.#colorPickerDom.style.visibility = 'hidden';
+        }
+      }
   }
   // 开始绘制
-  #handleMousedown(event) {
+  #handleMousedown(event: any) {
     this.#position.x = event.offsetX;
     this.#position.y = event.offsetY;
     this.#isDrawing = true;
@@ -263,7 +283,7 @@ class TangImageEditor {
     this.#canvasCtx.stroke(); // 进行绘制
   }
   // 绘制
-  #handleMousemove(event) {
+  #handleMousemove(event: any) {
     if (!this.#isDrawing) return;
     this.#canvasCtx.moveTo(this.#position.x, this.#position.y);
     this.#canvasCtx.lineTo(event.offsetX, event.offsetY);
@@ -277,14 +297,14 @@ class TangImageEditor {
     this.#isDrawing = false;
     this.#position.x = 0;
     this.#position.y = 0;
-    const imageData = this.#canvasCtx.getImageData(0, 0, this.#width, this.#height);
+    const imageData: any = this.#canvasCtx.getImageData(0, 0, this.#width, this.#height);
     const newIndex = this.#currentIndex + 1;
     this.#historyData.splice(newIndex, this.#historyData.length - newIndex, imageData);
     this.#currentIndex = newIndex;
     this.#initSubmenuDom();
   }
-  #handleSubmenu(event) {
-    let target = event.target;
+  #handleSubmenu(event: any) {
+    const target = event.target;
     const classes = (target.getAttribute('class') || '').split(' ');
     if (classes.includes('active') && target.parentNode === this.#wrapper.querySelector('.tang_submenubar')) {
       if (classes.includes('tang_reset')) {
@@ -324,17 +344,17 @@ class TangImageEditor {
   // 保存图片回调
   async toDataURL() {
     return new Promise(resolve => {
-      const { width, height } = this.#originalImage;
+      const { width, height } = this.#originalImage as HTMLImageElement;
       const img = new Image();
       img.width = width;
       img.height = height;
-      img.src = this.#canvasDom.toDataURL('image/png');
+      img.src = (this.#canvasDom as HTMLCanvasElement).toDataURL('image/png');
       img.onload = () => {
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas') as HTMLCanvasElement;
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(this.#originalImage, 0, 0, width, height);
+        const ctx = canvas.getContext('2d') as any;
+        ctx.drawImage((this.#originalImage as HTMLImageElement), 0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         const dataUrl = canvas.toDataURL('image/png');
         resolve(dataUrl);
