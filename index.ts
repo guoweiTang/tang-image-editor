@@ -3,7 +3,7 @@
  * @Author: tangguowei
  * @Date: 2022-03-31 11:39:06
  * @LastEditors: tangguowei
- * @LastEditTime: 2022-04-12 17:00:54
+ * @LastEditTime: 2022-04-19 18:07:07
  */
 import colorPicker from 'tui-color-picker';
 import 'tui-color-picker/dist/tui-color-picker.css';
@@ -178,7 +178,7 @@ class TangImageEditor {
     });
     this.#strokeValDom = this.#wrapper.querySelector('.tang_stroke_val') as HTMLElement;
     strokeDom.noUiSlider.on('update', (values: number[]) => {
-      this.#initLinewidthDom(values[0]);
+      this.#initLinewidthDom(Math.round(values[0]));
     });
   }
   // 渲染颜色
